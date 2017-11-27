@@ -1023,7 +1023,7 @@ function commerce_shipping_delete_shipping_line_items($order, $skip_save = FALSE
 
   foreach ($order_wrapper->commerce_line_items as $delta => $line_item_wrapper) {
     // If this line item is a shipping line item...
-    if ($line_item_wrapper->type->value() == 'shipping') {
+    if ($line_item_wrapper->getBundle() == 'shipping') {
       // Store its ID for later deletion and remove the reference from the line
       // item reference field.
       $line_item_ids[] = $line_item_wrapper->line_item_id->value();
