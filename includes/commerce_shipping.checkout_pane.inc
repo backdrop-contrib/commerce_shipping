@@ -228,8 +228,7 @@ function commerce_shipping_recalculate_services_submit($form, &$form_state) {
 
     // If this pane is actually present in the form...
     if (!empty($form[$pane_id])) {
-      // If the profile copy button has been checked for this
-      // customer profile...
+      // If the profile copy button has been checked for this customer profile...
       if (!empty($form_state['values'][$pane_id]['commerce_customer_profile_copy'])) {
         $source_id = 'customer_profile_' . variable_get('commerce_' . $pane_id . '_profile_copy_source', '');
         $info = array('commerce_customer_profile', $type, $pane_id);
@@ -292,14 +291,13 @@ function commerce_shipping_recalculate_services_submit($form, &$form_state) {
 
   // Save the order and rebuild the form to reflect the updated customer data.
   if ($rebuild) {
-    // Reset commerce_order entity cache so we can check "changed" properly.
-    entity_get_controller('commerce_order')->resetCache();
-
     // Avoid overwriting an already updated order.
-    $stored_order = commerce_order_load($order->order_id);
-    if ($stored_order->changed < $order->changed) {
+    $stored_order = entity_load_unchanged('commerce_order', $order->order_id);
+
+    if ($stored_order->changed <= $order->changed) {
       commerce_order_save($order);
     }
+
     $form_state['rebuild'] = TRUE;
   }
 }
