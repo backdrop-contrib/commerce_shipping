@@ -3,7 +3,7 @@
 /**
  * Adds a shipping quote recalculation change callback to customer profile fields.
  */
-Drupal.behaviors.commerceShipping = {
+Backdrop.behaviors.commerceShipping = {
   attach: function (context, settings) {
     $('[id^="edit-customer-profile-"] .form-item', context).children('.form-select, .form-text, .form-radio, .form-checkbox:not([name*="[commerce_customer_profile_copy]"])').filter(':not(.shipping-recalculation-processed)').addClass('shipping-recalculation-processed').change(function() {
       return $.fn.commerceCheckShippingRecalculation();

@@ -1,0 +1,5 @@
+{
+    "_config_name": "commerce_shipping.settings",
+    "commerce_shipping_pane_require_service": false,
+    "commerce_shipping_recalculate_services": true
+}

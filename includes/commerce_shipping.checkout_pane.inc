@@ -9,19 +9,20 @@
  * Checkout pane callback: returns the shipping service pane's settings form.
  */
 function commerce_shipping_pane_settings_form($checkout_pane) {
+  $config = config('commerce_shipping.settings');
   $form = array();
 
   $form['commerce_shipping_pane_require_service'] = array(
     '#type' => 'checkbox',
     '#title' => t('Require a shipping service at all times, preventing checkout if none are available.'),
-    '#default_value' => variable_get('commerce_shipping_pane_require_service', FALSE),
+    '#default_value' => $config->get('commerce_shipping_pane_require_service'),
   );
 
   $form['commerce_shipping_recalculate_services'] = array(
     '#type' => 'checkbox',
     '#title' => t('Calculate shipping rates via AJAX as addresses are updated on the checkout form.'),
     '#description' => t('Calculation is only triggered when all required fields have been entered and the shipping services pane is visible on the page.'),
-    '#default_value' => variable_get('commerce_shipping_recalculate_services', TRUE),
+    '#default_value' => $config->get('commerce_shipping_recalculate_services'),
   );
 
   return $form;
@@ -32,7 +33,7 @@ function commerce_shipping_pane_settings_form($checkout_pane) {
  */
 function commerce_shipping_pane_checkout_form($form, &$form_state, $checkout_pane, $order) {
   // Ensure this include file is loaded when the form is rebuilt from the cache.
-  $form_state['build_info']['files']['form'] = drupal_get_path('module', 'commerce_shipping') . '/includes/commerce_shipping.checkout_pane.inc';
+  $form_state['build_info']['files']['form'] = backdrop_get_path('module', 'commerce_shipping') . '/includes/commerce_shipping.checkout_pane.inc';
 
   $pane_form = array(
     '#prefix' => '<div id="commerce-shipping-service-ajax-wrapper">',
@@ -136,7 +137,7 @@ function commerce_shipping_pane_checkout_form($form, &$form_state, $checkout_pan
   else {
     // Otherwise display a message indicating whether or not we need a shipping
     // service to be selected to complete checkout.
-    if (variable_get('commerce_shipping_pane_require_service', FALSE)) {
+    if (config_get('commerce_shipping.settings', 'commerce_shipping_pane_require_service')) {
       $message = t('No valid shipping rates found for your order, and we require shipping service selection to complete checkout.') . '<br /><strong>' . t('Please verify you have supplied all required information or contact us to resolve the issue.') . '</strong>';
     }
     else {
@@ -184,7 +185,7 @@ function commerce_shipping_recalculate_services_validate($form, &$form_state) {
   $recalculate = commerce_shipping_recalculate_services($form, $form_state);
 
   // Retrieve the form validation errors.
-  $errors = drupal_get_messages('error');
+  $errors = backdrop_get_messages('error');
 
   // If there were any errors, we clear them.
   if (!empty($errors)) {
@@ -230,6 +231,7 @@ function commerce_shipping_recalculate_services_submit($form, &$form_state) {
     if (!empty($form[$pane_id])) {
       // If the profile copy button has been checked for this customer profile...
       if (!empty($form_state['values'][$pane_id]['commerce_customer_profile_copy'])) {
+        // @todo update to match commerce_customer.
         $source_id = 'customer_profile_' . variable_get('commerce_' . $pane_id . '_profile_copy_source', '');
         $info = array('commerce_customer_profile', $type, $pane_id);
 
@@ -246,6 +248,7 @@ function commerce_shipping_recalculate_services_submit($form, &$form_state) {
 
           // Look first for a profile coming from a matching customer profile
           // reference field.
+          // @todo update to match commerce_customer.
           if ($source_field_name = variable_get('commerce_' . $source_id . '_field', '')) {
             $profile = $wrapper->{$source_field_name}->value();
           }
@@ -341,12 +344,12 @@ function commerce_shipping_pane_checkout_form_validate($form, &$form_state, $che
         // To prevent payment method validation routines from having to return
         // TRUE explicitly, only return FALSE if it was specifically returned.
         // Otherwise default to TRUE.
-        return $result === FALSE ? FALSE : TRUE;
+        return $result === FALSE?FALSE : TRUE;
       }
     }
-    elseif (variable_get('commerce_shipping_pane_require_service', FALSE)) {
+    elseif (config_get('commerce_shipping.settings', 'commerce_shipping_pane_require_service')) {
       // But fail validation if no rates were returned and we require selection.
-      drupal_set_message(t('You cannot continue checkout without selecting a valid shipping service. Please verify your address information or contact us if an error is preventing you from seeing valid shipping rates for your order.'), 'error');
+      backdrop_set_message(t('You cannot continue checkout without selecting a valid shipping service. Please verify your address information or contact us if an error is preventing you from seeing valid shipping rates for your order.'), 'error');
       return FALSE;
     }
   }

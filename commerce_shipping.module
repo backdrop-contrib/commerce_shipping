@@ -44,13 +44,34 @@ function commerce_shipping_hook_info() {
   return $hooks;
 }
 
+
+/**
+ * Implements hook_config_info().
+ */
+function commerce_shipping_config_info() {
+  $prefixes['commerce_shipping.settings'] = array(
+    'label' => t('Shipping settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function commerce_shipping_autoload_info() {
+  return array(
+    'commerce_shipping_handler_relationship_shipping_line_item_representative' => 'includes/views/handlers/commerce_shipping_handler_relationship_shipping_line_item_representative.inc',
+  );
+}
+
 /**
  * Implements hook_views_api().
  */
 function commerce_shipping_views_api() {
   return array(
     'api' => 3,
-    'path' => drupal_get_path('module', 'commerce_shipping') . '/includes/views',
+    'path' => backdrop_get_path('module', 'commerce_shipping') . '/includes/views',
   );
 }
 
@@ -173,9 +194,9 @@ function _commerce_shipping_default_rules_reset($modules) {
   // rebuild the default Rules especially for this module so the default rules
   // and components will appear properly for this module.
   if ($reset_default_rules) {
-    entity_defaults_rebuild();
+    entity_plus_defaults_rebuild();
     rules_clear_cache(TRUE);
-    variable_set('menu_rebuild_needed', TRUE);
+    state_set('menu_rebuild_needed', TRUE);
   }
 }
 
@@ -203,7 +224,7 @@ function commerce_shipping_module_implements_alter(&$implementations, $hook) {
  *   An associative array of shipping method arrays keyed by the method_id.
  */
 function commerce_shipping_methods() {
-  $shipping_methods = &drupal_static(__FUNCTION__);
+  $shipping_methods = &backdrop_static(__FUNCTION__);
 
   // If the shipping methods haven't been defined yet, do so now.
   if (!isset($shipping_methods)) {
@@ -219,7 +240,7 @@ function commerce_shipping_methods() {
       }
     }
 
-    drupal_alter('commerce_shipping_method_info', $shipping_methods);
+    backdrop_alter('commerce_shipping_method_info', $shipping_methods);
 
     foreach ($shipping_methods as $name => &$shipping_method) {
       $defaults = array(
@@ -240,7 +261,7 @@ function commerce_shipping_methods() {
  * Resets the cached list of shipping methods.
  */
 function commerce_shipping_methods_reset() {
-  $shipping_methods = &drupal_static('commerce_shipping_methods');
+  $shipping_methods = &backdrop_static('commerce_shipping_methods');
   $shipping_methods = NULL;
 }
 
@@ -321,7 +342,7 @@ function commerce_shipping_method_options_list() {
  */
 function commerce_shipping_services($method = NULL) {
   // First check the static cache for a shipping services array.
-  $shipping_services = &drupal_static(__FUNCTION__);
+  $shipping_services = &backdrop_static(__FUNCTION__);
 
   // If it did not exist, fetch the services now.
   if (!isset($shipping_services)) {
@@ -366,7 +387,7 @@ function commerce_shipping_services($method = NULL) {
     }
 
     // Last allow the info to be altered by other modules.
-    drupal_alter('commerce_shipping_service_info', $shipping_services);
+    backdrop_alter('commerce_shipping_service_info', $shipping_services);
   }
 
   // Filter out services that don't match the specified shipping method filter.
@@ -389,7 +410,7 @@ function commerce_shipping_services($method = NULL) {
  * Resets the cached list of shipping services.
  */
 function commerce_shipping_services_reset() {
-  $shipping_services = &drupal_static('commerce_shipping_services');
+  $shipping_services = &backdrop_static('commerce_shipping_services');
   $shipping_services = NULL;
 }
 
@@ -404,7 +425,7 @@ function commerce_shipping_services_reset() {
  */
 function commerce_shipping_service_load($name) {
   $shipping_services = commerce_shipping_services();
-  return empty($shipping_services[$name]) ? FALSE : $shipping_services[$name];
+  return empty($shipping_services[$name])?FALSE : $shipping_services[$name];
 }
 
 /**
@@ -660,7 +681,7 @@ function commerce_shipping_service_rate_options($order, &$form_state) {
   }
 
   // Allow modules to alter the options array generated for the rates.
-  drupal_alter('commerce_shipping_service_rate_options', $options, $order, $form_state);
+  backdrop_alter('commerce_shipping_service_rate_options', $options, $order, $form_state);
 
   return $options;
 }
@@ -830,7 +851,7 @@ function commerce_shipping_line_item_add_form($form, &$form_state) {
   // Store the available rates in the form.
   $form = array();
 
-  $form['#attached']['css'][] = drupal_get_path('module', 'commerce_shipping') . '/theme/commerce_shipping.admin.css';
+  $form['#attached']['css'][] = backdrop_get_path('module', 'commerce_shipping') . '/theme/commerce_shipping.admin.css';
 
   $form['shipping_rates'] = array(
     '#type' => 'value',
@@ -976,7 +997,7 @@ function commerce_shipping_line_item_new($service, $unit_price, $order_id = 0, $
   commerce_shipping_line_item_populate($line_item, $service, $unit_price);
 
   // Allow other modules to add additional data to the line item if necessary.
-  drupal_alter('commerce_shipping_line_item_new', $line_item);
+  backdrop_alter('commerce_shipping_line_item_new', $line_item);
 
   // Return the line item.
   return $line_item;
@@ -1124,14 +1145,14 @@ function commerce_shipping_form_commerce_checkout_form_alter(&$form, &$form_stat
         'event' => 'click',
       ),
       '#attached' => array(
-        'js' => array(drupal_get_path('module', 'commerce_shipping') . '/js/commerce_shipping.js'),
+        'js' => array(backdrop_get_path('module', 'commerce_shipping') . '/js/commerce_shipping.js'),
       ),
     );
 
     // Hide the recalculation button via JavaScript if there are shipping rate
     // options or if there aren't any options and shipping service selection is
     // required for checkout.
-    if (!empty($form['commerce_shipping']['shipping_rates']['#value']) || !variable_get('commerce_shipping_pane_require_service', FALSE)) {
+    if (!empty($form['commerce_shipping']['shipping_rates']['#value']) || !config_get('commerce_shipping.settings', 'commerce_shipping_pane_require_service')) {
       $form['commerce_shipping']['recalculate']['#states'] = array(
         'invisible' => array(
           ':input[id^="edit-commerce-shipping-recalculate"]' => array('value' => t('Recalculate shipping')),
@@ -1161,7 +1182,7 @@ function commerce_shipping_commerce_customer_profile_copy_refresh_alter(&$comman
 function commerce_shipping_recalculate_services($form, $form_state = NULL, $ignore_shipping = FALSE) {
   // If the shipping services pane is on the form and it has been configured to
   // support automatic recalculation...
-  if ((!empty($form['commerce_shipping']) || $ignore_shipping) && variable_get('commerce_shipping_recalculate_services', TRUE)) {
+  if ((!empty($form['commerce_shipping']) || $ignore_shipping) && config_get('commerce_shipping.settings', 'commerce_shipping_recalculate_services')) {
     // If no form state was passed in, we only need to determine whether or not
     // there is a customer profile pane on the current form that might trigger
     // shipping rate recalculation if its form elements are changed.

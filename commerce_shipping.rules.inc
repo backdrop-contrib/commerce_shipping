@@ -20,7 +20,7 @@ function commerce_shipping_rules_event_info() {
     'group' => t('Commerce Shipping'),
     'variables' => array(
       'commerce_order' => array(
-        'label' => t('Order', array(), array('context' => 'a drupal commerce order')),
+        'label' => t('Order', array(), array('context' => 'a backdrop commerce order')),
         'type' => 'commerce_order',
         'skip save' => TRUE,
       ),

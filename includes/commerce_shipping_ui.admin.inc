@@ -9,7 +9,7 @@
  * Displays all shipping methods or services defined for a method in a table.
  */
 function commerce_shipping_ui_overview($type, $method = NULL) {
-  drupal_add_css(drupal_get_path('module', 'commerce_shipping_ui') . '/theme/commerce_shipping.admin.css');
+  backdrop_add_css(backdrop_get_path('module', 'commerce_shipping_ui') . '/theme/commerce_shipping.admin.css');
 
   // Load the items that will be represented in the overview table.
   if ($type == 'methods') {
@@ -17,7 +17,7 @@ function commerce_shipping_ui_overview($type, $method = NULL) {
   }
   else {
     $items = commerce_shipping_services($method);
-    uasort($items, 'drupal_sort_weight');
+    uasort($items, 'backdrop_sort_weight');
   }
 
   $header = array(
@@ -31,13 +31,13 @@ function commerce_shipping_ui_overview($type, $method = NULL) {
   foreach ($items as $name => $item) {
     if ($item['admin_list']) {
       // Build the operation links for the current item.
-      $arg = ($type == 'methods') ? strtr($name, '_', '-') : strtr($method . '-' . $name, '_', '-');
+      $arg = ($type == 'methods')?strtr($name, '_', '-') : strtr($method . '-' . $name, '_', '-');
 
       $links = menu_contextual_links('commerce-shipping-' . $type, 'admin/commerce/config/shipping/' . $type, array($arg));
 
       // Add the item's row to the table's rows array.
       $rows[] = array(
-        ($type == 'methods') ? theme('shipping_method_admin_overview', array('shipping_method' => $item)) : theme('shipping_service_admin_overview', array('shipping_service' => $item)),
+        ($type == 'methods')?theme('shipping_method_admin_overview', array('shipping_method' => $item)) : theme('shipping_service_admin_overview', array('shipping_service' => $item)),
         theme('links', array('links' => $links, 'attributes' => array('class' => 'links inline operations'))),
       );
     }
@@ -74,6 +74,7 @@ function commerce_shipping_ui_overview($type, $method = NULL) {
  * @ingroup themeable
  */
 function theme_shipping_method_admin_overview($variables) {
+  // TODO: Should this theme shipping_method_admin_overview be declared in hook_theme()?
   $shipping_method = $variables['shipping_method'];
 
   // Build the actual output.
@@ -94,6 +95,7 @@ function theme_shipping_method_admin_overview($variables) {
  * @ingroup themeable
  */
 function theme_shipping_service_admin_overview($variables) {
+  // TODO: Should this theme shipping_service_admin_overview be declared in hook_theme()?
   $shipping_service = $variables['shipping_service'];
 
   $output = check_plain($shipping_service['title']);

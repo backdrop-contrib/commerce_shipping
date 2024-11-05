@@ -3,4 +3,5 @@ description = Provides an example shipping method for testing and development.
 package = Commerce (shipping)
 dependencies[] = commerce
 dependencies[] = commerce_shipping
-core = 7.x
+backdrop = 1.x
+type = module
