@@ -17,7 +17,7 @@ function commerce_shipping_ui_overview($type, $method = NULL) {
   }
   else {
     $items = commerce_shipping_services($method);
-    uasort($items, 'backdrop_sort_weight');
+    backdrop_sort($items, array('weight'));
   }
 
   $header = array(
